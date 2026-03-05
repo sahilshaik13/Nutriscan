@@ -237,8 +237,17 @@ export default function OnboardingPage() {
       router.push('/dashboard')
     } catch (err) {
       console.error('[v0] Failed to save health profile:', err)
-      const errorMessage = err instanceof Error ? err.message : String(err)
-      alert(`Failed to save preferences: ${errorMessage}`)
+      let errorMessage = 'Failed to save preferences. Please try again.'
+      
+      if (err instanceof Error) {
+        errorMessage = err.message
+      } else if (typeof err === 'object' && err !== null && 'message' in err) {
+        errorMessage = (err as any).message
+      } else if (typeof err === 'string') {
+        errorMessage = err
+      }
+      
+      alert(errorMessage)
       setIsLoading(false)
     }
   }
