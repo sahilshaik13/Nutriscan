@@ -140,12 +140,26 @@ async def analyze_image(request: ImageAnalysisRequest):
 {food_hint}
 {health_context}
 
+IMPORTANT - DETECT IMAGE TYPE:
+- If the image shows a NUTRITION FACTS LABEL or NUTRITIONAL INFORMATION TABLE on packaged food:
+  * Read ALL the nutritional values directly from the label (calories, fat, protein, carbs, sodium, etc.)
+  * Read the ingredients list if visible
+  * Read the serving size from the label
+  * If you can identify the product name/brand from the packaging, use it as food_name
+  * If you CANNOT identify what the product is, set confidence to "low" and make the FIRST question ask the user to identify the product with "allow_specify": true
+    Example first question: {{"id": "product_name", "question": "What packaged food product is this?", "type": "single_choice", "options": ["Chocolate", "Cookies", "Chips", "Cereal", "Other snack"], "allow_specify": true, "specify_placeholder": "Enter the product name (e.g., Amul Dark Chocolate)"}}
+  * For nutrition labels, focus questions on: product identification (if unknown), how many servings they plan to eat, and health-related concerns
+- If the image shows ACTUAL FOOD (a dish, meal, fruit, etc.):
+  * Identify the food visually and estimate ingredients
+  * Focus questions on portion size, cooking method, and ingredient variations
+
 Respond in JSON format only (no markdown, no code blocks):
 {{
-    "food_name": "name of the dish",
+    "food_name": "name of the dish or product",
     "ingredients": ["ingredient1", "ingredient2", ...],
-    "serving_size": "approximate serving size",
+    "serving_size": "serving size from label or estimated",
     "confidence": "high/medium/low",
+    "is_nutrition_label": true or false,
     "questions": [
         {{
             "id": "q1",
@@ -158,20 +172,21 @@ Respond in JSON format only (no markdown, no code blocks):
     ]
 }}
 
-IMPORTANT: Generate 3-5 highly relevant questions that would significantly impact the nutritional analysis:
+Generate 3-5 highly relevant questions that would significantly impact the nutritional analysis:
 
 1. ALWAYS include a portion/weight question with "allow_specify": true so users can input exact weights like "150g", "2 cups", etc.
    Example: {{"id": "portion", "question": "What's the portion size?", "type": "single_choice", "options": ["Small (100g)", "Medium (200g)", "Large (300g)"], "allow_specify": true, "specify_placeholder": "Enter exact weight (e.g., 175g)"}}
 
-2. Ask about cooking method if it affects nutrition (fried vs baked vs steamed)
+2. For NUTRITION LABELS: if you cannot identify the product, the FIRST question MUST ask "What packaged food product is this?" with allow_specify: true
 
-3. Ask about specific ingredients if they vary (type of oil, added sugar, cheese type)
+3. Ask about cooking method if it affects nutrition (fried vs baked vs steamed) - skip this for packaged foods
+
+4. Ask about specific ingredients if they vary (type of oil, added sugar, cheese type)
    For variable ingredients, include "allow_specify": true
-   Example: {{"id": "oil", "question": "What type of oil was used?", "type": "single_choice", "options": ["Olive oil", "Vegetable oil", "Butter", "No oil"], "allow_specify": true, "specify_placeholder": "Specify other oil type"}}
 
-4. Ask about additions/toppings that impact nutrition
+5. Ask about additions/toppings that impact nutrition
 
-5. If user has allergies/dietary restrictions, ask about ingredient substitutions
+6. If user has allergies/dietary restrictions, ask about ingredient substitutions
 
 Set "allow_specify": true for questions where exact values matter (weight, specific ingredients)."""
         
