@@ -82,9 +82,7 @@ export default function ScanPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [healthProfile, setHealthProfile] = useState<HealthProfile | null>(null)
-  const [showFoodIdentifier, setShowFoodIdentifier] = useState(false)
-  const [foodNameInput, setFoodNameInput] = useState('')
-  const [pendingImage, setPendingImage] = useState<{ data: string; type: string } | null>(null)
+
 
   useEffect(() => {
     const fetchHealthProfile = async () => {
@@ -106,56 +104,6 @@ export default function ScanPage() {
 
     fetchHealthProfile()
   }, [])
-
-  const handleFoodNameSubmit = async () => {
-    if (!foodNameInput.trim() || !pendingImage) return
-
-    setCapturedImage(pendingImage.data)
-    setMimeType(pendingImage.type)
-    setPendingImage(null)
-    setShowFoodIdentifier(false)
-    setError(null)
-    setStep('analyzing')
-
-    try {
-      const response = await fetch('/api/analyze-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image_base64: pendingImage.data,
-          mime_type: pendingImage.type,
-          health_profile: healthProfile,
-          food_name_hint: foodNameInput,
-        }),
-      })
-
-      const responseText = await response.text()
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} - ${responseText}`)
-      }
-
-      const data: InitialAnalysis = JSON.parse(responseText)
-      setInitialAnalysis(data)
-
-      if (data.questions && data.questions.length > 0) {
-        setStep('questions')
-      } else {
-        handleQuickAnalysis(pendingImage.data, pendingImage.type)
-      }
-    } catch (err) {
-      const errorMessage = await (async () => {
-        if (err instanceof Response) {
-          return await parseApiError(err)
-        }
-        return getErrorMessage(err)
-      })()
-      setError(errorMessage)
-      setStep('capture')
-    } finally {
-      setFoodNameInput('')
-    }
-  }
 
   const handleImageCapture = async (imageData: string, type: string) => {
     setCapturedImage(imageData)
@@ -202,8 +150,7 @@ export default function ScanPage() {
   }
 
   const handleImageUpload = (imageData: string, type: string) => {
-    setPendingImage({ data: imageData, type })
-    setShowFoodIdentifier(true)
+    handleImageCapture(imageData, type)
   }
 
   const handleQuickAnalysis = async (imageData: string, type: string) => {
@@ -339,8 +286,6 @@ export default function ScanPage() {
     setNutritionData(null)
     setError(null)
     setStep('capture')
-    setPendingImage(null)
-    setFoodNameInput('')
   }
 
   if (showCamera) {
@@ -378,51 +323,6 @@ export default function ScanPage() {
         {error && (
           <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
             {error}
-          </div>
-        )}
-
-        {/* Food Identifier Modal */}
-        {showFoodIdentifier && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl">
-              <h2 className="mb-2 text-xl font-bold">What food product is this?</h2>
-              <p className="mb-6 text-sm text-muted-foreground">
-                Help us identify the product for accurate nutrition analysis. You can provide the brand name, product name, or a description.
-              </p>
-              <input
-                type="text"
-                value={foodNameInput}
-                onChange={(e) => setFoodNameInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleFoodNameSubmit()
-                  }
-                }}
-                placeholder="e.g., 'Chocolate chip cookies', 'Almond milk'"
-                className="mb-6 w-full rounded-lg border border-border bg-background px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                autoFocus
-              />
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowFoodIdentifier(false)
-                    setPendingImage(null)
-                    setFoodNameInput('')
-                  }}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleFoodNameSubmit}
-                  disabled={!foodNameInput.trim()}
-                  className="flex-1"
-                >
-                  Analyze
-                </Button>
-              </div>
-            </div>
           </div>
         )}
 
