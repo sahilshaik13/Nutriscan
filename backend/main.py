@@ -7,6 +7,12 @@ import json
 import re
 import asyncio
 
+import os
+from dotenv import load_dotenv
+
+# Add this line to load the variables from the .env file!
+load_dotenv() 
+
 app = fastapi.FastAPI()
 
 app.add_middleware(
