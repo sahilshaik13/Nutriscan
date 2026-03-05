@@ -25,6 +25,7 @@ class ImageAnalysisRequest(BaseModel):
     image_base64: str
     mime_type: str = "image/jpeg"
     health_profile: dict | None = None
+    food_name_hint: str | None = None
 
 class FollowUpRequest(BaseModel):
     food_name: str
@@ -127,10 +128,16 @@ async def analyze_image(request: ImageAnalysisRequest):
     try:
         health_context = build_health_context(request.health_profile)
         
+        # Include food name hint if provided
+        food_hint = ""
+        if request.food_name_hint:
+            food_hint = f"\nIMPORTANT: The user has indicated this food product is or may be: '{request.food_name_hint}'. Use this information to guide your analysis."
+        
         prompt = f"""Analyze this food image and provide:
 1. The name of the food/dish
 2. A list of likely ingredients you can identify or reasonably infer
 3. The approximate serving size visible
+{food_hint}
 {health_context}
 
 Respond in JSON format only (no markdown, no code blocks):
