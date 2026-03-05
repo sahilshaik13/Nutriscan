@@ -640,56 +640,6 @@ export default function ScanPage() {
     </div>
   )
 }
-      const dbHealthRating = healthRatingMap[nutritionData.health_rating.toLowerCase()] || 'moderate'
-
-      const insertData = {
-        user_id: user.id,
-        food_name: nutritionData.food_name,
-        image_url: capturedImage ? `data:${mimeType};base64,${capturedImage}` : null,
-        ingredients: nutritionData.ingredients,
-        nutrition_data: {
-          serving_size: nutritionData.serving_size,
-          calories: nutritionData.calories,
-          total_fat: nutritionData.total_fat,
-          saturated_fat: nutritionData.saturated_fat,
-          trans_fat: nutritionData.trans_fat,
-          cholesterol: nutritionData.cholesterol,
-          sodium: nutritionData.sodium,
-          total_carbohydrates: nutritionData.total_carbohydrates,
-          dietary_fiber: nutritionData.dietary_fiber,
-          total_sugars: nutritionData.total_sugars,
-          added_sugars: nutritionData.added_sugars,
-          protein: nutritionData.protein,
-          vitamin_d: nutritionData.vitamin_d,
-          calcium: nutritionData.calcium,
-          iron: nutritionData.iron,
-          potassium: nutritionData.potassium,
-          health_insights: nutritionData.health_insights,
-          recommendations: nutritionData.recommendations,
-          personal_health_impacts: nutritionData.personal_health_impacts,
-        },
-        health_score: nutritionData.health_score,
-        health_rating: dbHealthRating,
-      }
-
-      console.log('[v0] Insert data:', JSON.stringify(insertData).substring(0, 500))
-
-      const { error: insertError } = await supabase.from('food_scans').insert(insertData)
-
-      if (insertError) {
-        console.error('[v0] Insert error:', insertError)
-        throw insertError
-      }
-      
-      console.log('[v0] Save successful, redirecting to dashboard')
-      router.push('/dashboard')
-    } catch (err) {
-      console.error('[v0] Save error:', err)
-      setError(`Failed to save: ${err instanceof Error ? err.message : 'Unknown error'}`)
-    } finally {
-      setIsSaving(false)
-    }
-  }
 
   const handleReset = () => {
     setCapturedImage(null)
