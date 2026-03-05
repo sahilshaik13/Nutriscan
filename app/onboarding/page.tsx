@@ -202,7 +202,11 @@ export default function OnboardingPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
 
+      console.log('[v0] Onboarding complete button clicked')
+      console.log('[v0] User ID:', user?.id)
+
       if (!user) {
+        console.error('[v0] No user found, redirecting to login')
         router.push('/auth/login')
         return
       }
@@ -217,15 +221,24 @@ export default function OnboardingPage() {
         onboarding_completed: true,
       }
 
-      const { error } = await supabase
+      console.log('[v0] Saving profile data:', profileData)
+
+      const { error, data } = await supabase
         .from('health_profiles')
         .upsert(profileData, { onConflict: 'user_id' })
 
-      if (error) throw error
+      if (error) {
+        console.error('[v0] Supabase error:', error)
+        throw error
+      }
 
+      console.log('[v0] Profile saved successfully:', data)
+      console.log('[v0] Redirecting to dashboard...')
       router.push('/dashboard')
     } catch (err) {
-      console.error('Failed to save health profile:', err)
+      console.error('[v0] Failed to save health profile:', err)
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      alert(`Failed to save preferences: ${errorMessage}`)
       setIsLoading(false)
     }
   }
