@@ -2,14 +2,19 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
+  const error = searchParams.get('error')
+
+  if (error) {
+    return NextResponse.redirect(new URL(`/auth/error?error=${encodeURIComponent(error)}`, request.url))
+  }
 
   if (code) {
     const supabase = await createClient()
-    const { error, data } = await supabase.auth.exchangeCodeForSession(code)
+    const { error: exchangeError, data } = await supabase.auth.exchangeCodeForSession(code)
     
-    if (!error && data.user) {
+    if (!exchangeError && data.user) {
       // Check if user has completed onboarding
       const { data: profile } = await supabase
         .from('health_profiles')
@@ -17,22 +22,13 @@ export async function GET(request: Request) {
         .eq('user_id', data.user.id)
         .single()
 
-      const forwardedHost = request.headers.get('x-forwarded-host')
-      const isLocalEnv = process.env.NODE_ENV === 'development'
-      
-      // Redirect to onboarding if not completed, otherwise to dashboard
       const redirectPath = profile?.onboarding_completed ? '/dashboard' : '/onboarding'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nutriscan-sap.vercel.app'
       
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${redirectPath}`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${redirectPath}`)
-      } else {
-        return NextResponse.redirect(`${origin}${redirectPath}`)
-      }
+      return NextResponse.redirect(new URL(redirectPath, appUrl))
     }
   }
 
   // Return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/error?error=Could not verify email`)
+  return NextResponse.redirect(new URL('/auth/error?error=Email verification failed', request.url))
 }
