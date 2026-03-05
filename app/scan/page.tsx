@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { parseApiError, getErrorMessage } from '@/lib/error-messages'
 import { Button } from '@/components/ui/button'
 import { CameraCapture } from '@/components/camera-capture'
 import { ImageUpload } from '@/components/image-upload'
@@ -151,7 +152,13 @@ export default function ScanPage() {
       }
     } catch (err) {
       console.error('[v0] Error in handleFoodNameSubmit:', err)
-      setError(`Failed to analyze the image: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      const errorMessage = await (async () => {
+        if (err instanceof Response) {
+          return await parseApiError(err)
+        }
+        return getErrorMessage(err)
+      })()
+      setError(errorMessage)
       setStep('capture')
     } finally {
       setFoodNameInput('')
@@ -200,7 +207,13 @@ export default function ScanPage() {
       }
     } catch (err) {
       console.error('[v0] Error in handleImageCapture:', err)
-      setError(`Failed to analyze the image: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      const errorMessage = await (async () => {
+        if (err instanceof Response) {
+          return await parseApiError(err)
+        }
+        return getErrorMessage(err)
+      })()
+      setError(errorMessage)
       setStep('capture')
     }
   }
@@ -225,15 +238,16 @@ export default function ScanPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to calculate nutrition')
+        const errorMessage = await parseApiError(response)
+        throw new Error(errorMessage)
       }
 
       const data: NutritionData = await response.json()
       setNutritionData(data)
       setStep('results')
-    } catch {
-      setError('Failed to calculate nutrition. Please try again.')
-      setStep('capture')
+    } catch (err) {
+      setError(getErrorMessage(err))
+      setStep('questions')
     }
   }
 
@@ -254,14 +268,15 @@ export default function ScanPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to calculate nutrition')
+        const errorMessage = await parseApiError(response)
+        throw new Error(errorMessage)
       }
 
       const data: NutritionData = await response.json()
       setNutritionData(data)
       setStep('results')
-    } catch {
-      setError('Failed to calculate nutrition. Please try again.')
+    } catch (err) {
+      setError(getErrorMessage(err))
       setStep('questions')
     }
   }
@@ -700,15 +715,16 @@ export default function ScanPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to calculate nutrition')
+        const errorMessage = await parseApiError(response)
+        throw new Error(errorMessage)
       }
 
       const data: NutritionData = await response.json()
       setNutritionData(data)
       setStep('results')
-    } catch {
-      setError('Failed to calculate nutrition. Please try again.')
-      setStep('capture')
+    } catch (err) {
+      setError(getErrorMessage(err))
+      setStep('questions')
     }
   }
 
@@ -729,14 +745,15 @@ export default function ScanPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to calculate nutrition')
+        const errorMessage = await parseApiError(response)
+        throw new Error(errorMessage)
       }
 
       const data: NutritionData = await response.json()
       setNutritionData(data)
       setStep('results')
-    } catch {
-      setError('Failed to calculate nutrition. Please try again.')
+    } catch (err) {
+      setError(getErrorMessage(err))
       setStep('questions')
     }
   }
