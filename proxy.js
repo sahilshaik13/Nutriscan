@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export async function proxy(request: NextRequest) {
+export async function proxy(request) {
   let supabaseResponse = NextResponse.next({
     request,
   })

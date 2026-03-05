@@ -631,72 +631,15 @@ export default function ScanPage() {
           </Link>
           <Link href="/dashboard" className="flex flex-col items-center gap-1 text-muted-foreground/60 transition-colors hover:text-foreground">
             <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-
-  // Fetch user's health profile on mount
-  useEffect(() => {
-    const fetchHealthProfile = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user) {
-        const { data } = await supabase
-          .from('health_profiles')
-          .select('allergies, intolerances, medical_conditions, dietary_lifestyles')
-          .eq('user_id', user.id)
-          .single()
-        
-        if (data) {
-          setHealthProfile(data)
-        }
-      }
-    }
-    
-    fetchHealthProfile()
-  }, [])
-
-  const handleImageCapture = async (imageData: string, type: string) => {
-    setCapturedImage(imageData)
-    setMimeType(type)
-    setShowCamera(false)
-    setError(null)
-    setStep('analyzing')
-
-    console.log('[v0] Starting image analysis...')
-    console.log('[v0] Image data length:', imageData.length)
-    console.log('[v0] MIME type:', type)
-
-    try {
-      const response = await fetch('/api/analyze-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          image_base64: imageData, 
-          mime_type: type,
-          health_profile: healthProfile 
-        }),
-      })
-
-      console.log('[v0] Response status:', response.status)
-      
-      const responseText = await response.text()
-      console.log('[v0] Response body:', responseText.substring(0, 500))
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} - ${responseText}`)
-      }
-
-      const data: InitialAnalysis = JSON.parse(responseText)
-      console.log('[v0] Parsed data:', data)
-      setInitialAnalysis(data)
-      
-      if (data.questions && data.questions.length > 0) {
-        setStep('questions')
-      } else {
-        handleQuickAnalysis(imageData, type)
-      }
-    } catch (err) {
-      console.error('[v0] Error in handleImageCapture:', err)
-      setError(`Failed to analyze the image: ${err instanceof Error ? err.message : 'Unknown error'}`)
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+            <span className="text-[10px] font-medium uppercase tracking-wider">Profile</span>
+          </Link>
+        </div>
+      </nav>
+    </div>
+  )
+}
       setStep('capture')
     }
   }
