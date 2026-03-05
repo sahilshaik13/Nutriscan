@@ -1,19 +1,19 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
-async function proxyHandler(request) {
+export async function proxy(request) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    return supabaseResponse
+  }
+
   try {
-    let supabaseResponse = NextResponse.next({
-      request,
-    })
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseKey) {
-      return supabaseResponse
-    }
-
     const supabase = createServerClient(
       supabaseUrl,
       supabaseKey,
@@ -80,13 +80,9 @@ async function proxyHandler(request) {
 
     return supabaseResponse
   } catch (error) {
-    console.error('[proxy] Error:', error)
-    return NextResponse.next()
+    return supabaseResponse
   }
 }
-
-export const proxy = proxyHandler
-export default proxyHandler
 
 export const config = {
   matcher: [
